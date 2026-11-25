@@ -49,4 +49,5 @@ mlkit-text-recognition = { module = "com.google.mlkit:text-recognition", version
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
+android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

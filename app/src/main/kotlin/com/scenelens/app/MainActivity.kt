@@ -22,7 +22,9 @@ class MainActivity : ComponentActivity() {
           modifier = Modifier.fillMaxSize(),
           color = MaterialTheme.colorScheme.background,
         ) {
-          SceneLensApp()
+          SceneLensApp(
+            analyzeScene = (application as SceneLensApplication).container.analyzeSceneUseCase,
+          )
         }
       }
     }

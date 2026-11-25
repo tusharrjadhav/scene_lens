@@ -38,11 +38,11 @@ Requirements:
 ./gradlew testDebugUnitTest
 ```
 
-The project uses a single Gradle application module with feature-based package
-boundaries. Domain contracts, ML Kit/image data adapters, camera/home/results
-features, reusable UI, and dependency composition are intentionally isolated so
-high-change features can later become independent Gradle modules without
-inverting dependency direction.
+The project uses real Gradle module boundaries for `domain`, `data:analysis`,
+`core:ui`, `feature:camera`, `feature:home`, `feature:results`, and
+`feature:scenelens`. The `app` module is the composition and launcher shell.
+Module dependencies enforce that ML Kit data code and concrete infrastructure
+cannot leak into feature presentation code.
 
 ## Privacy posture
 

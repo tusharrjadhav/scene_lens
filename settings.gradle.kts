@@ -32,4 +32,13 @@ plugins {
 
 rootProject.name = "SceneLens"
 
-include(":app")
+include(
+  ":app",
+  ":domain",
+  ":data:analysis",
+  ":core:ui",
+  ":feature:camera",
+  ":feature:home",
+  ":feature:results",
+  ":feature:scenelens",
+)

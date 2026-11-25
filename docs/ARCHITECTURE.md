@@ -1,78 +1,125 @@
 # SceneLens Android architecture
 
-SceneLens uses a single Gradle application module with package-level feature modularity. This keeps the current MVP simple to build while giving each future capability a stable boundary that can become a Gradle module when independently built features justify the added build cost.
+SceneLens uses Gradle modules so dependency direction is enforced by the build system.
 
-## Package boundaries
+## Module graph
 
 ```text
-com.scenelens.app
-├── core
-│   ├── clipboard    # system clipboard adapter
-│   ├── speech       # TTS lifecycle and playback adapter
-│   └── ui           # reusable UI tokens, labels, and permission UI
-├── data
-│   ├── image        # bitmap decoding, orientation, and downsampling
-│   └── mlkit        # ML Kit processing, mapping, and result composition
-├── di               # application dependency container
-├── domain
-│   ├── model        # scene-analysis models
-│   └── AnalyzeSceneUseCase
-└── feature
-    ├── camera       # CameraX preview and capture lifecycle
-    ├── home         # start and input-selection UI
-    ├── results      # image overlays, summary, item, and OCR UI
-    └── scenelens    # feature coordinator, screen state, and ViewModel
+:app
+├── :feature:scenelens
+│   ├── :feature:camera
+│   │   └── :core:ui
+│   ├── :feature:home
+│   │   └── :core:ui
+│   ├── :feature:results
+│   │   ├── :domain
+│   │   └── :core:ui
+│   ├── :core:ui
+│   └── :domain
+├── :data:analysis
+│   └── :domain
+├── :core:ui
+└── :domain
 ```
+
+The graph has one composition root (`:app`) and no feature-to-feature dependency cycle.
+
+## Module responsibilities
+
+### `:app`
+
+- Android `Application` and launcher activity
+- Process-level dependency container
+- Manifest, launcher resources, backup policy, and packaging
+
+The app shell does not contain camera, ML, or result-screen implementation. It wires `AnalyzeSceneUseCase` into the coordinator feature.
+
+### `:domain`
+
+- Scene analysis models
+- Detection confidence and source types
+- `AnalyzeSceneUseCase`
+
+This module has no dependency on ML Kit, CameraX, Compose, or application code. It currently uses Android's `Uri` and `Bitmap` platform types, which keeps the MVP practical while preserving a small, replaceable domain API.
+
+### `:data:analysis`
+
+- Image decoding, EXIF orientation, and downsampling
+- ML Kit object detection, image labeling, and OCR
+- ML Kit-to-domain mapping
+- Scene summary and detailed-result composition
+
+Only the analysis implementation knows ML Kit. Features receive domain models through the use-case interface.
+
+### `:core:ui`
+
+- Material theme and shared typography/colors
+- Shared touch-target/action-size tokens
+- Resource-backed confidence labels and copy
+- TTS and clipboard adapters
+- Reusable camera-permission rationale UI
+
+### `:feature:camera`
+
+- CameraX lifecycle and preview UI
+- In-memory capture state
+- Temporary photo-file lifecycle and capture errors
+- Camera manifest feature and permission declarations
+
+### `:feature:home`
+
+- Start experience
+- Camera/gallery actions
+- Capability and privacy explanations
+
+### `:feature:results`
+
+- Analyzed image and bounding-box overlay
+- Summary and TTS controls
+- Tappable detections and confidence cards
+- OCR copy UI
+
+### `:feature:scenelens`
+
+- Product flow coordination
+- `SceneLensViewModel` and UI state
+- Camera/gallery result launchers
+- Home/progress/result screen switching
+
+The coordinator depends on domain interfaces and sibling UI features, not on `:data:analysis` or `SceneLensApplication`.
 
 ## Dependency rules
 
-- `domain` has no dependency on `data`, `feature`, ML Kit, CameraX, or Compose. It currently uses Android's `Uri` and `Bitmap` platform types because the MVP remains a single Android app; extraction into a pure Kotlin module would first replace these with platform abstractions.
-- `data` implements domain use cases and may depend on Android and third-party ML/image libraries.
-- `feature` depends on `domain` and `core`; it does not instantiate ML Kit clients or decode image bytes.
-- `core` contains reusable, product-agnostic helpers. It must not depend on feature packages.
-- `di` is the only production composition point that wires concrete data implementations to domain interfaces.
-- `MainActivity` owns the UI shell and does not construct model or data services.
+- `:domain` depends on no project module.
+- `:data:*` and `:feature:*` may depend on `:domain`; `:domain` never depends back.
+- Features do not depend on `:app`.
+- Features do not instantiate ML Kit clients.
+- Only `:app` knows the concrete data implementation and composes dependencies.
+- Shared system/UI adapters belong in `:core:ui`; they must not depend on a feature.
 
 ## State and data flow
 
 ```text
-Camera/gallery event
-    -> SceneLensApp
+camera or photo-picker event
+    -> :feature:scenelens
     -> SceneLensViewModel
     -> AnalyzeSceneUseCase
-    -> BitmapImageDecoder + ML Kit adapters
+    -> :data:analysis
     -> immutable SceneLensUiState
-    -> focused feature composables
+    -> camera/home/results composables
 ```
 
-`SceneLensViewModel` is the state owner. Composables receive immutable state and callbacks and do not coordinate image processing. New analysis cancels the previous job, and one-shot errors are cleared after the UI displays them.
+New analysis cancels the previous job. UI composables receive state and callbacks rather than coordinating image decoding or model clients.
 
-## Composition strategy
+## Testing ownership
 
-`SceneLensApplication` owns a small manual `AppContainer`. The container keeps construction and lifecycle explicit without adding a dependency-injection framework before the app needs one. `SceneLensViewModel.Factory` reads the use case from that container, making the ViewModel independently constructible in local tests.
+- `:feature:scenelens` owns ViewModel and coordinator Compose tests.
+- Add pure ML mapping/composition tests to `:data:analysis`.
+- Add camera lifecycle tests to `:feature:camera` only when they are device-oriented.
+- Move tests with the implementation they verify instead of keeping a centralized app test directory.
 
-## UI conventions
+## Extending the structure
 
-- Feature screens are split from reusable cards, rows, image overlays, and permission UI.
-- Shared touch-target and action-height values live in `SceneLensUiTokens`.
-- User-visible confidence labels are resource-backed and resolved in the UI layer rather than embedded in domain types.
-- Composables expose state plus callbacks; implementation details such as CameraX controllers and TTS engines remain in small lifecycle owners.
-- Large-flow files should not mix camera, home, and result responsibilities.
+Add a new vertical feature as `:feature:<name>`. It can depend on `:domain` and `:core:ui`; it should not depend on unrelated features. Add `:feature:food` for dish/ingredient recognition when its model and safety evaluation are ready, backed by either an additional `:data:food` adapter or a domain implementation registered in `:app`.
 
-## Testing
-
-- Unit tests construct ViewModels with `AnalyzeSceneUseCase` fakes and do not require Android application wiring.
-- Compose tests target feature screens through public/internal behavior and meaningful text/semantics.
-- Data adapters should gain pure mapping tests and image-decoder tests as their inputs diversify.
-- Camera integration remains an instrumented/device concern.
-
-## When to extract Gradle modules
-
-Keep package modularity until at least one of these becomes true:
-
-- another feature needs to consume the domain model independently;
-- a feature needs an isolated build, ownership boundary, or different dependency graph;
-- ML/data dependencies materially slow unrelated UI compilation;
-- app, benchmark, or alternate-form-factor targets need shared code.
-
-At that point, extract in this order: `:core:domain`, `:core:ui`, `:data:analysis`, then individual `:feature:*` modules. Preserve the dependency direction above rather than moving code mechanically.
+Future pure business logic can be moved into Kotlin/JVM modules after Android `Uri`/`Bitmap` dependencies are replaced by platform-neutral input and image abstractions.
