@@ -23,6 +23,7 @@ The current summary is assembled from visual-label and object results. A vision-
 
 - [Phased implementation plan](docs/IMPLEMENTATION_PLAN.md)
 - [UX and accessibility recommendations](docs/UX_RECOMMENDATIONS.md)
+- [Android architecture and package boundaries](docs/ARCHITECTURE.md)
 
 ## Build
 
@@ -36,6 +37,12 @@ Requirements:
 ./gradlew assembleDebug
 ./gradlew testDebugUnitTest
 ```
+
+The project uses a single Gradle application module with feature-based package
+boundaries. Domain contracts, ML Kit/image data adapters, camera/home/results
+features, reusable UI, and dependency composition are intentionally isolated so
+high-change features can later become independent Gradle modules without
+inverting dependency direction.
 
 ## Privacy posture
 

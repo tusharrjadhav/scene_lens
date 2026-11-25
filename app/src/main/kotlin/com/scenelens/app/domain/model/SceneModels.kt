@@ -1,4 +1,4 @@
-package com.scenelens.app.data
+package com.scenelens.app.domain.model
 
 import android.graphics.Bitmap
 
@@ -9,10 +9,10 @@ data class NormalizedRect(
   val bottom: Float,
 )
 
-enum class ConfidenceBand(val label: String) {
-  HIGH("Likely"),
-  MEDIUM("Possibly"),
-  LOW("Uncertain"),
+enum class ConfidenceBand {
+  HIGH,
+  MEDIUM,
+  LOW,
 }
 
 enum class DetectionSource {
@@ -36,12 +36,4 @@ data class SceneAnalysis(
   val details: List<String>,
   val recognizedText: String?,
   val items: List<DetectedItem>,
-)
-
-data class SceneLensUiState(
-  val isAnalyzing: Boolean = false,
-  val isCameraOpen: Boolean = false,
-  val analysis: SceneAnalysis? = null,
-  val selectedItemId: String? = null,
-  val errorMessage: String? = null,
 )

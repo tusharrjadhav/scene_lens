@@ -1,11 +1,10 @@
-package com.scenelens.app.ui.main
+package com.scenelens.app.feature.scenelens
 
 import androidx.activity.ComponentActivity
-import androidx.compose.ui.test.assertExists
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import com.scenelens.app.R
-import com.scenelens.app.data.SceneLensUiState
 import com.scenelens.app.ui.theme.SceneLensTheme
 import org.junit.Rule
 import org.junit.Test
@@ -24,9 +23,9 @@ class SceneLensScreenTest {
 
     composeTestRule
       .onNodeWithText(composeTestRule.activity.getString(R.string.take_photo))
-      .assertExists()
+      .assertIsDisplayed()
     composeTestRule
       .onNodeWithText(composeTestRule.activity.getString(R.string.choose_photo))
-      .assertExists()
+      .assertIsDisplayed()
   }
 }

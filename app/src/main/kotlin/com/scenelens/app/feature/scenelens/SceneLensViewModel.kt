@@ -1,13 +1,12 @@
-package com.scenelens.app.ui.main
+package com.scenelens.app.feature.scenelens
 
 import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.scenelens.app.data.OnDeviceSceneAnalyzer
-import com.scenelens.app.data.SceneAnalyzer
-import com.scenelens.app.data.SceneLensUiState
+import com.scenelens.app.SceneLensApplication
+import com.scenelens.app.domain.AnalyzeSceneUseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +17,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 class SceneLensViewModel(
-  private val analyzer: SceneAnalyzer,
+  private val analyzeScene: AnalyzeSceneUseCase,
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(SceneLensUiState())
   val uiState: StateFlow<SceneLensUiState> = _uiState.asStateFlow()
@@ -45,7 +44,7 @@ class SceneLensViewModel(
         )
       }
       try {
-        val result = analyzer.analyze(uri)
+        val result = analyzeScene(uri)
         _uiState.update { it.copy(isAnalyzing = false, analysis = result) }
       } catch (cancellation: CancellationException) {
         throw cancellation
@@ -82,14 +81,14 @@ class SceneLensViewModel(
   }
 
   class Factory(context: Context) : ViewModelProvider.Factory {
-    private val appContext = context.applicationContext
+    private val container = (context.applicationContext as SceneLensApplication).container
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-      if (modelClass.isAssignableFrom(SceneLensViewModel::class.java)) {
-        return SceneLensViewModel(OnDeviceSceneAnalyzer(appContext)) as T
+      require(modelClass.isAssignableFrom(SceneLensViewModel::class.java)) {
+        "Unknown ViewModel class: ${modelClass.name}"
       }
-      throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
+      return SceneLensViewModel(container.analyzeSceneUseCase) as T
     }
   }
 }

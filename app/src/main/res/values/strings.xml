@@ -13,6 +13,9 @@
     <string name="reading_description">Extract signs, labels, documents, menus, and packaging with on-device OCR.</string>
     <string name="confidence_title">Honest confidence</string>
     <string name="confidence_description">Likely, possibly, and uncertain results are named instead of presented as facts.</string>
+    <string name="confidence_likely">Likely</string>
+    <string name="confidence_possible">Possibly</string>
+    <string name="confidence_uncertain">Uncertain</string>
     <string name="privacy_title">Private by default</string>
     <string name="privacy_body">The app has no Internet permission. Images and analysis stay on this device; captures are deleted after analysis.</string>
     <string name="analyzing">Looking at your image…</string>

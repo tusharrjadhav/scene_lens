@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.scenelens.app.ui.main.SceneLensApp
+import com.scenelens.app.feature.scenelens.SceneLensApp
 import com.scenelens.app.ui.theme.SceneLensTheme
 
 class MainActivity : ComponentActivity() {

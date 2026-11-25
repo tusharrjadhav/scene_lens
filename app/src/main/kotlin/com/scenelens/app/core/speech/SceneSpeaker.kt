@@ -1,4 +1,4 @@
-package com.scenelens.app.ui.main
+package com.scenelens.app.core.speech
 
 import android.speech.tts.TextToSpeech
 import androidx.compose.runtime.Composable
