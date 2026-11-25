@@ -24,6 +24,7 @@ The current summary is assembled from visual-label and object results. A vision-
 - [Phased implementation plan](docs/IMPLEMENTATION_PLAN.md)
 - [UX and accessibility recommendations](docs/UX_RECOMMENDATIONS.md)
 - [Android architecture and package boundaries](docs/ARCHITECTURE.md)
+- [Reusable QA images and manual test matrix](qa/test-images/README.md)
 
 ## Build
 
